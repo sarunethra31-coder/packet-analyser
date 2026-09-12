@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaVoice - Tanglish & Multi-Language Voice Translator</title>
+  <meta name="description" content="Translate Tanglish, Tamil, English, and 25+ global languages using text and AI voice assistant. Real-time speech recognition and synthesis.">
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./src/styles/main.css">
+</head>
+<body>
+  <!-- Ambient background glow particles -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <i class="fa-solid fa-language"></i>
+          <span class="pulse-ring"></span>
+        </div>
+        <div class="logo-text">
+          <h1>LinguaVoice <span class="badge">AI PRO</span></h1>
+          <p>Tanglish & Multi-Language Voice Translator</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="translator">
+          <i class="fa-solid fa-repeat"></i> Translator
+        </button>
+        <button class="nav-tab" data-tab="assistant">
+          <i class="fa-solid fa-robot"></i> Voice Assistant
+        </button>
+        <button class="nav-tab" data-tab="phrases">
+          <i class="fa-solid fa-book-bookmark"></i> Quick Phrases
+        </button>
+        <button class="nav-tab" data-tab="dictionary">
+          <i class="fa-solid fa-spell-check"></i> Tanglish Dictionary
+        </button>
+        <button class="nav-tab" data-tab="history">
+          <i class="fa-solid fa-clock-rotate-left"></i> History <span id="history-badge" class="nav-count">0</span>
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button id="voice-settings-btn" class="icon-btn-secondary" title="Audio & Voice Settings">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- Hero Banner & Voice Assistant Launcher -->
+    <section class="hero-banner">
+      <div class="hero-info">
+        <h2><span class="highlight-cyan">Tanglish</span> to <span class="highlight-purple">English</span> & Global Languages</h2>
+        <p>Type or speak Tanglish (phonetic Tamil in Latin script) or any language. Experience voice assistant support, speech recognition, and instant script conversion.</p>
+      </div>
+      <button id="hero-assistant-btn" class="assistant-trigger-btn">
+        <div class="mic-orb">
+          <i class="fa-solid fa-microphone"></i>
+          <span class="orb-ring"></span>
+        </div>
+        <div class="assistant-btn-text">
+          <span class="btn-title">Talk to Lingua AI Assistant</span>
+          <span class="btn-sub">Click to speak & ask anything in Tanglish or English</span>
+        </div>
+      </button>
+    </section>
+
+    <!-- SECTION 1: TRANSLATOR TAB -->
+    <section id="tab-translator" class="tab-panel active">
+      <!-- Translator Card Grid -->
+      <div class="translator-grid">
+        
+        <!-- Source Box -->
+        <div class="card translator-box source-box">
+          <div class="box-header">
+            <div class="language-select-wrapper">
+              <i class="fa-solid fa-globe select-icon"></i>
+              <select id="source-lang-select" class="lang-select">
+                <option value="auto">✨ Auto-Detect Language</option>
+                <option value="tanglish" selected>🔥 Tanglish (Tamil in English)</option>
+                <option value="en">English</option>
+                <option value="ta">Tamil (தமிழ்)</option>
+                <option value="hi">Hindi (हिन्दी)</option>
+                <option value="te">Telugu (తెలుగు)</option>
+                <option value="ml">Malayalam (മലയാളം)</option>
+                <option value="kn">Kannada (கன்னடம்)</option>
+                <option value="es">Spanish (Español)</option>
+                <option value="fr">French (Français)</option>
+                <option value="de">German (Deutsch)</option>
+                <option value="ja">Japanese (日本語)</option>
+                <option value="zh">Chinese (中文)</option>
+                <option value="ar">Arabic (العربية)</option>
+                <option value="ru">Russian (Русский)</option>
+              </select>
+            </div>
+            
+            <div class="box-badges">
+              <span id="detected-lang-badge" class="detected-badge hidden">Detected: Tanglish</span>
+            </div>
+          </div>
+
+          <div class="textarea-wrapper">
+            <textarea id="source-text" placeholder="Type or speak here... e.g. 'Vanakkam bro, epdi irukinga? Nalla irukenaa?'" rows="5"></textarea>
+            
+            <!-- Audio wave overlay when listening -->
+            <div id="mic-wave-container" class="mic-wave-container hidden">
+              <canvas id="mic-canvas" width="300" height="60"></canvas>
+              <div class="mic-status-label">
+                <i class="fa-solid fa-microphone-lines fa-beat"></i> Listening... Speak in Tanglish or English
+              </div>
+            </div>
+          </div>
+
+          <div class="box-footer">
+            <div class="footer-left">
+              <button id="mic-btn" class="action-btn mic-btn" title="Voice Input (Microphone)">
+                <i class="fa-solid fa-microphone"></i>
+                <span>Voice Input</span>
+              </button>
+              <button id="clear-text-btn" class="action-btn" title="Clear input">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+
+            <div class="footer-right">
+              <button id="source-tts-btn" class="action-btn" title="Listen to text">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+              <span id="char-count" class="char-count">0 / 2000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swap Language Center Button -->
+        <div class="swap-wrapper">
+          <button id="swap-lang-btn" class="swap-btn" title="Swap languages">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </button>
+        </div>
+
+        <!-- Target Box -->
+        <div class="card translator-box target-box">
+          <div class="box-header">
+            <div class="language-select-wrapper">
+              <i class="fa-solid fa-language select-icon"></i>
+              <select id="target-lang-select" class="lang-select">
+                <option value="en" selected>English</option>
+                <option value="tanglish">🔥 Tanglish (Tamil in English)</option>
+                <option value="ta">Tamil (தமிழ்)</option>
+                <option value="hi">Hindi (हिन्दी)</option>
+                <option value="te">Telugu (తెలుగు)</option>
+                <option value="ml">Malayalam (മലയാളം)</option>
+                <option value="kn">Kannada (கன்னடம்)</option>
+                <option value="es">Spanish (Español)</option>
+                <option value="fr">French (Français)</option>
+                <option value="de">German (Deutsch)</option>
+                <option value="ja">Japanese (日本語)</option>
+                <option value="zh">Chinese (中文)</option>
+                <option value="ar">Arabic (العربية)</option>
+                <option value="ru">Russian (Русский)</option>
+              </select>
+            </div>
+
+            <!-- Extra options for Tanglish script conversion -->
+            <div class="box-badges">
+              <button id="tamil-script-toggle" class="script-toggle-btn" title="Toggle Tamil Script transliteration">
+                <i class="fa-solid fa-font"></i> Tamil Script
+              </button>
+            </div>
+          </div>
+
+          <div class="textarea-wrapper">
+            <textarea id="target-text" placeholder="Translation will appear here in real-time..." readonly rows="5"></textarea>
+            
+            <!-- Secondary script box (e.g., Tanglish converted to Tamil script) -->
+            <div id="secondary-script-box" class="secondary-script-box hidden">
+              <span class="secondary-label">Tamil Script (தமிழ்):</span>
+              <p id="secondary-script-text"></p>
+            </div>
+
+            <!-- Loading Spinner Overlay -->
+            <div id="translation-loader" class="translation-loader hidden">
+              <div class="spinner"></div>
+              <span>Translating...</span>
+            </div>
+          </div>
+
+          <div class="box-footer">
+            <div class="footer-left">
+              <button id="target-tts-btn" class="action-btn primary-action" title="Speak translation">
+                <i class="fa-solid fa-volume-high"></i>
+                <span>Listen</span>
+              </button>
+              <button id="copy-target-btn" class="action-btn" title="Copy to clipboard">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <div class="footer-right">
+              <button id="fav-btn" class="action-btn" title="Save to Favorites">
+                <i class="fa-regular fa-star"></i>
+              </button>
+              <button id="share-btn" class="action-btn" title="Share Translation">
+                <i class="fa-solid fa-share-nodes"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Try Suggestions -->
+      <div class="quick-try-bar card">
+        <span class="quick-title"><i class="fa-solid fa-lightbulb"></i> Try popular Tanglish inputs:</span>
+        <div class="quick-chips">
+          <button class="chip" data-text="Vanakkam bro, epdi irukinga?">"Vanakkam bro, epdi irukinga?"</button>
+          <button class="chip" data-text="Naan nalla irukken, romba nandri">"Naan nalla irukken, romba nandri"</button>
+          <button class="chip" data-text="Sapadu aachaa? Enna panreenga?">"Sapadu aachaa? Enna panreenga?"</button>
+          <button class="chip" data-text="Nalaki office varviya machi?">"Nalaki office varviya machi?"</button>
+          <button class="chip" data-text="Idhu vera level, sema gethu!">"Idhu vera level, sema gethu!"</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: VOICE ASSISTANT TAB -->
+    <section id="tab-assistant" class="tab-panel">
+      <div class="card assistant-full-view">
+        <div class="assistant-header-hero">
+          <div class="glowing-bot-avatar">
+            <i class="fa-solid fa-robot"></i>
+            <div class="sonar-wave"></div>
+          </div>
+          <h2>Lingua Voice Assistant</h2>
+          <p>Your hands-free conversational voice helper. Speak in Tanglish or English to get instant translations, dictionary meanings, and phrase guidance.</p>
+        </div>
+
+        <!-- Assistant Chat Stream -->
+        <div id="assistant-chat-container" class="assistant-chat-container">
+          <div class="chat-bubble bot-bubble">
+            <div class="bubble-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="bubble-content">
+              <p><strong>Lingua AI:</strong> Vanakkam! I am your Tanglish & Voice Assistant. How can I help you today? You can click the microphone button or type below.</p>
+              <div class="suggested-prompts">
+                <button class="prompt-btn" data-ask="Translate 'Enna panreenga' to English">"Translate 'Enna panreenga' to English"</button>
+                <button class="prompt-btn" data-ask="How do you say 'Thank you very much' in Tanglish?">"How do you say 'Thank you very much' in Tanglish?"</button>
+                <button class="prompt-btn" data-ask="What does 'Sapadu aachaa' mean?">"What does 'Sapadu aachaa' mean?"</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assistant Controls -->
+        <div class="assistant-controls">
+          <button id="assistant-mic-btn" class="assistant-mic-main">
+            <i class="fa-solid fa-microphone"></i>
+            <span>Push to Speak</span>
+          </button>
+          <div class="assistant-input-group">
+            <input type="text" id="assistant-text-input" placeholder="Type a message or translation query to Lingua Assistant...">
+            <button id="assistant-send-btn" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: QUICK PHRASES TAB -->
+    <section id="tab-phrases" class="tab-panel">
+      <div class="section-intro card">
+        <h2><i class="fa-solid fa-book-bookmark"></i> Tanglish Essential Phrases Hub</h2>
+        <p>Explore everyday conversations translated from Tanglish into English & Tamil script. Click any phrase to listen or send it directly to the translator!</p>
+        
+        <div class="phrase-category-filters">
+          <button class="cat-filter active" data-cat="all">All Phrases</button>
+          <button class="cat-filter" data-cat="greetings">Greetings & Respect</button>
+          <button class="cat-filter" data-cat="casual">Casual & Friends</button>
+          <button class="cat-filter" data-cat="dining">Food & Dining</button>
+          <button class="cat-filter" data-cat="questions">Common Questions</button>
+          <button class="cat-filter" data-cat="slang">Popular Tanglish Slang</button>
+        </div>
+      </div>
+
+      <!-- Phrase Grid -->
+      <div id="phrases-grid" class="phrases-grid">
+        <!-- Rendered dynamically via phrasesData.js -->
+      </div>
+    </section>
+
+    <!-- SECTION 4: TANGLISH DICTIONARY TAB -->
+    <section id="tab-dictionary" class="tab-panel">
+      <div class="card dictionary-container">
+        <div class="dictionary-header">
+          <div>
+            <h2><i class="fa-solid fa-spell-check"></i> Tanglish-English Lexicon & Slang Dictionary</h2>
+            <p>Understand the meaning, Tamil script, and context of popular Tanglish words.</p>
+          </div>
+          <div class="dictionary-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="dict-search-input" placeholder="Search word e.g. 'Machi', 'Sema', 'Sapadu'...">
+          </div>
+        </div>
+
+        <div id="dictionary-list" class="dictionary-list">
+          <!-- Rendered dynamically via dictionaryData.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: HISTORY & FAVORITES TAB -->
+    <section id="tab-history" class="tab-panel">
+      <div class="card history-container">
+        <div class="history-header">
+          <h2><i class="fa-solid fa-clock-rotate-left"></i> Translation History & Favorites</h2>
+          <div class="history-actions">
+            <button id="filter-favs-btn" class="action-btn"><i class="fa-solid fa-star"></i> Show Favorites Only</button>
+            <button id="clear-history-btn" class="action-btn danger"><i class="fa-solid fa-trash"></i> Clear History</button>
+          </div>
+        </div>
+
+        <div id="history-list" class="history-list">
+          <!-- Dynamically populated from localStorage -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Audio / Voice Settings Modal -->
+  <div id="voice-settings-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders"></i> Audio & Voice Settings</h3>
+        <button class="modal-close-btn" data-close="voice-settings-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <label for="voice-select">Text-To-Speech Voice:</label>
+          <select id="voice-select" class="lang-select"></select>
+        </div>
+        <div class="setting-item">
+          <label for="voice-rate">Speaking Speed (Rate): <span id="rate-val">1.0</span></label>
+          <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.1" value="1.0">
+        </div>
+        <div class="setting-item">
+          <label for="voice-pitch">Voice Pitch: <span id="pitch-val">1.0</span></label>
+          <input type="range" id="voice-pitch" min="0.5" max="1.5" step="0.1" value="1.0">
+        </div>
+        <div class="setting-item">
+          <button id="test-voice-btn" class="action-btn primary-action">
+            <i class="fa-solid fa-play"></i> Test Voice Playback
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>LinguaVoice AI &copy; 2026 | Powerful Tanglish & Multi-Language Voice Translator | Built with Web Speech API & Neural NLP</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="./src/js/app.js"></script>
+</body>
+</html>
