@@ -183,31 +183,80 @@ const exactPhrasesMap = {
 
 // English -> Tanglish mapping for reverse translation
 const englishToTanglishMap = {
+  // Multi-word Phrases (Matched first by length)
+  "hello guys, where are you": "Vanakkam guys, enga irukinga",
+  "where are you going": "enga poreenga",
+  "where are you now": "ippo enga irukinga",
+  "where are you": "enga irukinga",
+  "how are you doing": "epdi irukinga",
+  "how are you": "epdi irukinga",
+  "what are you doing now": "ippo enna panreenga",
+  "what are you doing": "enna panreenga",
+  "what happened": "enna aachu",
+  "what is this": "idhu enna",
+  "what is that": "adhu enna",
+  "what is your name": "ungal per enna",
+  "who are you": "neenga yaaru",
+  "why are you late": "yen late ah vantheenga",
+  "why are you": "yen neenga",
+  "have you eaten": "sapadu aachaa",
+  "did you eat": "saptingala",
+  "i am fine": "naan nalla irukken",
+  "i feel bored": "enaku bore adikuthu",
+  "i am bored": "enaku bore adikuthu",
+  "i feel very bored": "enaku romba bore adikuthu",
+  "i am hungry": "enaku pasi edukuthu",
+  "i feel hungry": "enaku pasi edukuthu",
+  "i am sleepy": "enaku thookam varuthu",
+  "i feel sleepy": "enaku thookam varuthu",
+  "i don't understand": "enaku puriyala",
+  "i don't know": "enaku theriyadhu",
+  "i know": "enaku theriyum",
+  "thank you very much": "romba nandri",
+  "thank you": "romba nandri",
+  "don't worry": "kavalai padadhinga",
+  "good morning": "kaalai vanakkam",
+  "good night": "iniya iravu",
+  "goodbye": "poitu varren",
+  "see you later": "aprom parkalam",
+  "call me": "enaku call panunga",
+  "come here": "inga vaanga",
+  "go there": "anga ponga",
+  "please come": "vaanga",
+  "please sit": "ukkarunga",
+  "please tell": "sollunga",
+  "tell me": "sollunga",
+  "check and tell": "chek panni sollunga",
+  "how much is this": "idhu evlo",
+  "what is the time": "mani enna",
+  "let's go": "pogalaam",
+  "let us go": "pogalaam",
+  "i can do it": "ennala mudiyum",
+  "i cannot do it": "ennala mudiyadhu",
+  "i am leaving": "naan kelamburen",
+
+  // Single Words
   "hello": "Vanakkam",
-  "how are you": "Epdi irukinga",
-  "how are you?": "Epdi irukinga?",
-  "i am fine": "Naan nalla irukken",
-  "i feel bored": "Enaku bore adikuthu",
-  "i feel very bored": "Enaku romba bore adikuthu",
-  "i am bored": "Enaku bore adikuthu",
-  "thank you": "Romba nandri",
-  "thank you very much": "Romba nandri",
-  "what are you doing": "Enna panreenga",
-  "have you eaten": "Sapadu aachaa",
-  "what is your name": "Ungal per enna",
-  "where are you": "Enga irukinga",
-  "goodbye": "Poitu varren",
+  "hi": "Vanakkam",
   "brother": "Bro / Machi",
   "friend": "Machi",
+  "friends": "Machi",
   "good": "Nalla",
   "awesome": "Sema",
-  "very good": "Romba nalla",
-  "don't worry": "Kavalai padadhinga",
-  "tomorrow": "Nalaki",
-  "today": "Inniku",
-  "now": "Ippo",
-  "yes": "Aama",
-  "no": "Illa"
+  "where": "enga",
+  "when": "eppo",
+  "why": "yen",
+  "how": "epdi",
+  "what": "enna",
+  "who": "yaaru",
+  "here": "inga",
+  "there": "anga",
+  "now": "ippo",
+  "today": "inniku",
+  "tomorrow": "nalaki",
+  "yesterday": "nethu",
+  "yes": "aama",
+  "no": "illa"
 };
 
 // Phonetic Tanglish to Tamil Script Map
@@ -236,6 +285,7 @@ const tanglishToTamilPhonetic = [
   { p: "inniku", t: "இன்னைக்கு" },
   { p: "ippo", t: "இப்போ" },
   { p: "enga", t: "எங்க" },
+  { p: "poreenga", t: "போறீங்க" },
   { p: "per", t: "பெயர்" },
   { p: "evlo", t: "எவ்ளோ" },
   { p: "mani", t: "மணி" },
@@ -399,15 +449,21 @@ export function transliterateTanglishToTamil(input) {
 export function translateEnglishToTanglish(input) {
   if (!input || !input.trim()) return "";
 
-  const clean = input.trim().toLowerCase().replace(/[.,!?]/g, "");
+  let text = input.trim();
 
-  // Direct lookup
-  if (englishToTanglishMap[clean]) {
-    return englishToTanglishMap[clean];
+  // Sort phrases by length descending so multi-word phrases match first
+  const phraseKeys = Object.keys(englishToTanglishMap).sort((a, b) => b.length - a.length);
+
+  for (const phrase of phraseKeys) {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes(phrase)) {
+      const regex = new RegExp(`\\b${phrase}\\b`, 'gi');
+      text = text.replace(regex, englishToTanglishMap[phrase]);
+    }
   }
 
-  // Word-by-word fallback
-  const words = input.split(/\s+/);
+  // Word-by-word fallback for any remaining untranslated English words
+  const words = text.split(/\s+/);
   const result = words.map(w => {
     const cleanW = w.toLowerCase().replace(/[.,!?]/g, "");
     return englishToTanglishMap[cleanW] || w;
@@ -415,3 +471,4 @@ export function translateEnglishToTanglish(input) {
 
   return result.join(" ");
 }
+
