@@ -43,6 +43,32 @@ export const phrasesData = [
     tag: "Farewell"
   },
 
+  // Daily Feelings & Emotions
+  {
+    id: 24,
+    category: "casual",
+    tanglish: "Enaku romba bore adikuthu!",
+    english: "I feel very bored!",
+    tamil: "எனக்கு ரொம்ப போர் அடிக்குது!",
+    tag: "Feelings"
+  },
+  {
+    id: 25,
+    category: "casual",
+    tanglish: "Enaku pasi edukuthu!",
+    english: "I feel hungry!",
+    tamil: "எனக்கு பசி எடுக்குது!",
+    tag: "Feelings"
+  },
+  {
+    id: 26,
+    category: "casual",
+    tanglish: "Enaku thookam varuthu!",
+    english: "I feel sleepy!",
+    tamil: "எனக்கு தூக்கம் வருது!",
+    tag: "Feelings"
+  },
+
   // Casual & Friends
   {
     id: 6,

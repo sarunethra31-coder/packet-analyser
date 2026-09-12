@@ -25,7 +25,15 @@ const tanglishDict = {
   // Pronouns & Titles
   "naan": "I",
   "en": "my",
+  "enaku": "I",
+  "enakku": "I",
+  "unaku": "you",
+  "unakku": "you",
   "ennudaiya": "my",
+  "ennoda": "my",
+  "unnoda": "your",
+  "avanoda": "his",
+  "avaloda": "her",
   "neenga": "you",
   "nee": "you",
   "unga": "your",
@@ -41,6 +49,19 @@ const tanglishDict = {
   "mache": "buddy",
   "bro": "brother",
   "dude": "friend",
+
+  // Emotional Feelings & States
+  "bore adikuthu": "feel bored",
+  "bore adikkudhu": "feel bored",
+  "romba bore": "very bored",
+  "pasi edukuthu": "feel hungry",
+  "pasi edukkudhu": "feel hungry",
+  "thookam varuthu": "feel sleepy",
+  "thookam varudhu": "feel sleepy",
+  "thalai valikuthu": "have a headache",
+  "bayama irukku": "feel scared",
+  "santhosama irukku": "feel happy",
+  "kastama irukku": "feel difficult",
 
   // Common Verbs & States
   "irukken": "am fine",
@@ -68,8 +89,15 @@ const tanglishDict = {
   "aachu": "completed / happened",
   "pessalaam": "let's talk",
   "pessu": "talk",
+  "pesren": "will talk",
   "kaatnaan": "showing",
   "kattraan": "showing off",
+  "mudiyum": "can do",
+  "mudiyadhu": "cannot do",
+  "kelamburen": "am leaving",
+  "sollunga": "please tell",
+  "solli": "tell",
+  "sollu": "tell",
 
   // Question Words & Time
   "epdi": "how",
@@ -81,6 +109,8 @@ const tanglishDict = {
   "eppodhu": "when",
   "yaaru": "who",
   "yen": "why",
+  "edhukku": "why",
+  "ethukku": "why",
   "evlo": "how much",
   "evvalavu": "how much",
   "ethanai": "how many",
@@ -115,6 +145,18 @@ const tanglishDict = {
 
 // Common Full Phrase Direct Translations
 const exactPhrasesMap = {
+  "enaku romba bore adikuthu": "I feel very bored",
+  "enakku romba bore adikuthu": "I feel very bored",
+  "enaku bore adikuthu": "I feel bored",
+  "enakku bore adikuthu": "I feel bored",
+  "enaku pasi edukuthu": "I feel hungry",
+  "enakku pasi edukuthu": "I feel hungry",
+  "enaku thookam varuthu": "I feel sleepy",
+  "enakku thookam varuthu": "I feel sleepy",
+  "enaku thalai valikuthu": "I have a headache",
+  "enaku puriyala": "I don't understand",
+  "unaku purinjidha": "Did you understand?",
+  "unaku purinjidha?": "Did you understand?",
   "vanakkam bro, epdi irukinga?": "Hello bro, how are you?",
   "vanakkam, epdi irukinga?": "Hello, how are you?",
   "naan nalla irukken, romba nandri": "I am fine, thank you very much",
@@ -131,7 +173,12 @@ const exactPhrasesMap = {
   "intha idham enga irukku?": "Where is this place located?",
   "mani enna aachu?": "What time is it?",
   "poitu varren!": "Goodbye! See you again.",
-  "kavalai padadhinga, ellam seri aagum.": "Don't worry, everything will be fine."
+  "kavalai padadhinga, ellam seri aagum.": "Don't worry, everything will be fine.",
+  "naan aprom pesren": "I will talk later",
+  "seri naan kelamburen": "Okay, I am leaving",
+  "konjam chek panni sollunga": "Please check and tell me",
+  "ennala mudiyadhu": "I cannot do it",
+  "ennala mudiyum": "I can do it"
 };
 
 // English -> Tanglish mapping for reverse translation
@@ -140,6 +187,9 @@ const englishToTanglishMap = {
   "how are you": "Epdi irukinga",
   "how are you?": "Epdi irukinga?",
   "i am fine": "Naan nalla irukken",
+  "i feel bored": "Enaku bore adikuthu",
+  "i feel very bored": "Enaku romba bore adikuthu",
+  "i am bored": "Enaku bore adikuthu",
   "thank you": "Romba nandri",
   "thank you very much": "Romba nandri",
   "what are you doing": "Enna panreenga",
@@ -164,6 +214,12 @@ const englishToTanglishMap = {
 const tanglishToTamilPhonetic = [
   { p: "vanakkam", t: "வணக்கம்" },
   { p: "vanakam", t: "வணக்கம்" },
+  { p: "enaku", t: "எனக்கு" },
+  { p: "enakku", t: "எனக்கு" },
+  { p: "romba", t: "ரொம்ப" },
+  { p: "bore", t: "போர்" },
+  { p: "adikuthu", t: "அடிக்குது" },
+  { p: "adikkudhu", t: "அடிக்குது" },
   { p: "nandri", t: "நன்றி" },
   { p: "epdi", t: "எப்படி" },
   { p: "eppadi", t: "எப்படி" },
@@ -171,7 +227,6 @@ const tanglishToTamilPhonetic = [
   { p: "irukken", t: "இருக்கேன்" },
   { p: "naan", t: "நான்" },
   { p: "nalla", t: "நல்லா" },
-  { p: "romba", t: "ரொம்ப" },
   { p: "sapadu", t: "சாப்பாடு" },
   { p: "aachaa", t: "ஆச்சா" },
   { p: "enna", t: "என்ன" },
@@ -205,7 +260,7 @@ export function isTanglish(text) {
     "vanakkam", "epdi", "eppadi", "irukinga", "irukken", "nalla", "romba", "nandri",
     "sapadu", "aachaa", "panreenga", "machi", "nalaki", "inniku", "ippo", "enga",
     "enna", "evlo", "gethu", "sema", "kandipa", "poitu", "varren", "varveendga",
-    "theriyum", "puriyala", "kavalai", "aama", "illa"
+    "theriyum", "puriyala", "kavalai", "aama", "illa", "enaku", "enakku", "adikuthu", "bore"
   ];
 
   let matches = 0;
@@ -237,7 +292,7 @@ export function translateTanglishToEnglish(input) {
     }
   }
 
-  // 2. Tokenize and map individual words / bigrams
+  // 2. Tokenize and map n-grams (4-gram -> 3-gram -> 2-gram -> 1-gram)
   const words = cleanInput.split(/\s+/);
   const translatedWords = [];
 
@@ -246,12 +301,37 @@ export function translateTanglishToEnglish(input) {
     const rawWord = words[i];
     const cleanWord = rawWord.toLowerCase().replace(/[.,!?]/g, "");
     
-    // Check bigram (2 consecutive words)
+    // Check 4-gram
+    if (i < words.length - 3) {
+      const w2 = words[i + 1].toLowerCase().replace(/[.,!?]/g, "");
+      const w3 = words[i + 2].toLowerCase().replace(/[.,!?]/g, "");
+      const w4 = words[i + 3].toLowerCase().replace(/[.,!?]/g, "");
+      const quad = `${cleanWord} ${w2} ${w3} ${w4}`;
+      if (tanglishDict[quad]) {
+        translatedWords.push(tanglishDict[quad]);
+        i += 4;
+        continue;
+      }
+    }
+
+    // Check 3-gram (trigram)
+    if (i < words.length - 2) {
+      const w2 = words[i + 1].toLowerCase().replace(/[.,!?]/g, "");
+      const w3 = words[i + 2].toLowerCase().replace(/[.,!?]/g, "");
+      const tri = `${cleanWord} ${w2} ${w3}`;
+      if (tanglishDict[tri]) {
+        translatedWords.push(tanglishDict[tri]);
+        i += 3;
+        continue;
+      }
+    }
+
+    // Check 2-gram (bigram)
     if (i < words.length - 1) {
-      const nextWord = words[i + 1].toLowerCase().replace(/[.,!?]/g, "");
-      const bigram = `${cleanWord} ${nextWord}`;
-      if (tanglishDict[bigram]) {
-        translatedWords.push(tanglishDict[bigram]);
+      const w2 = words[i + 1].toLowerCase().replace(/[.,!?]/g, "");
+      const bi = `${cleanWord} ${w2}`;
+      if (tanglishDict[bi]) {
+        translatedWords.push(tanglishDict[bi]);
         i += 2;
         continue;
       }
@@ -281,6 +361,8 @@ export function translateTanglishToEnglish(input) {
  */
 function postProcessTanglishEnglish(str) {
   let s = str;
+  s = s.replace(/\bI very feel bored\b/gi, "I feel very bored");
+  s = s.replace(/\bI feel bored\b/gi, "I feel bored");
   s = s.replace(/\bhello bro how are present\b/gi, "Hello bro, how are you?");
   s = s.replace(/\bI good am fine\b/gi, "I am fine");
   s = s.replace(/\bhow are present\b/gi, "how are you");
