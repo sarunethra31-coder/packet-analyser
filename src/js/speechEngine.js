@@ -1,4 +1,4 @@
-// Web Speech API - Speech Recognition (STT) & Speech Synthesis (TTS) Engine
+// Web Speech API - Speech Recognition (STT) & Multi-Language Speech Synthesis (TTS) Engine
 
 class SpeechEngine {
   constructor() {
@@ -7,11 +7,11 @@ class SpeechEngine {
     this.isListening = false;
     this.animationId = null;
     this.voices = [];
+    this.currentAudio = null;
     
-    // Voice settings defaults
+    // Default settings
     this.rate = 1.0;
     this.pitch = 1.0;
-    this.selectedVoice = null;
 
     this.initRecognition();
     this.loadVoices();
@@ -33,7 +33,7 @@ class SpeechEngine {
   }
 
   /**
-   * Load available browser voices for Text-To-Speech
+   * Load available browser voices
    */
   loadVoices() {
     if (!this.synthesis) return;
@@ -49,7 +49,7 @@ class SpeechEngine {
   }
 
   /**
-   * Get Web Speech BCP-47 language tag
+   * Map language selection code to BCP-47 locale tag
    */
   getLangCode(lang) {
     const langMap = {
@@ -72,6 +72,30 @@ class SpeechEngine {
     };
 
     return langMap[lang] || (lang && lang.includes('-') ? lang : `${lang}-${lang.toUpperCase()}`);
+  }
+
+  /**
+   * Get StreamElements Public Voice Name for fallback audio
+   */
+  getStreamElementsVoice(lang) {
+    const voiceMap = {
+      'ta': 'Valluvar',
+      'tanglish': 'Valluvar',
+      'hi': 'Aditi',
+      'te': 'Chitra',
+      'ml': 'Malayalam',
+      'kn': 'Kannada',
+      'es': 'Conchita',
+      'fr': 'Celine',
+      'de': 'Marlene',
+      'ja': 'Mizuki',
+      'zh': 'Zhiyu',
+      'ar': 'Zeina',
+      'ru': 'Tatyana',
+      'en': 'Brian'
+    };
+
+    return voiceMap[lang] || 'Brian';
   }
 
   /**
@@ -128,106 +152,157 @@ class SpeechEngine {
   }
 
   /**
-   * Speak Text via Text-To-Speech (TTS) with Multi-Language Support & Audio Fallback
+   * Speak Text via Multi-Layer Text-To-Speech (TTS)
    */
   speakText(text, lang = 'en', onStart, onEnd) {
     if (!text || !text.trim()) return;
+
     const cleanText = text.trim();
     const langCode = this.getLangCode(lang);
     const shortLang = langCode.split('-')[0].toLowerCase();
 
-    // Ensure voices are updated
+    // Stop any active audio element playback
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+    }
+
+    // Unpause SpeechSynthesis if locked
+    if (this.synthesis) {
+      this.synthesis.cancel();
+      if (this.synthesis.paused) {
+        this.synthesis.resume();
+      }
+    }
+
+    // Refresh voices if empty
     if (this.synthesis && this.voices.length === 0) {
       this.voices = this.synthesis.getVoices() || [];
     }
 
-    // Check if browser has a matching voice for target language
-    const targetVoice = this.voices.find(v => {
+    // Check if browser has a native matching voice
+    const nativeVoice = this.voices.find(v => {
       const vLang = v.lang.toLowerCase().replace('_', '-');
       return vLang.startsWith(shortLang) || vLang.includes(langCode.toLowerCase());
     });
 
-    // 1. If Web Speech Synthesis supports target language with native voice
-    if (this.synthesis && targetVoice) {
-      this.synthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = langCode;
-      utterance.voice = targetVoice;
-      utterance.rate = this.rate;
-      utterance.pitch = this.pitch;
+    let spokeLocally = false;
 
-      if (onStart) utterance.onstart = onStart;
-      if (onEnd) {
-        utterance.onend = onEnd;
-        utterance.onerror = (e) => {
-          console.warn("SpeechSynthesis error, playing fallback audio stream:", e);
-          this.playAudioStreamFallback(cleanText, shortLang, onStart, onEnd);
-        };
-      }
-
-      this.synthesis.speak(utterance);
-      return;
-    }
-
-    // 2. If Web Speech Synthesis is available without a specific voice, try setting utterance.lang directly
+    // 1. Try Browser SpeechSynthesis
     if (this.synthesis && 'SpeechSynthesisUtterance' in window) {
-      this.synthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = langCode;
-      utterance.rate = this.rate;
-      utterance.pitch = this.pitch;
+      try {
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = langCode;
+        utterance.rate = this.rate;
+        utterance.pitch = this.pitch;
 
-      let started = false;
-      if (onStart) {
-        utterance.onstart = () => {
-          started = true;
-          onStart();
-        };
-      }
-
-      if (onEnd) {
-        utterance.onend = onEnd;
-        utterance.onerror = (e) => {
-          console.warn("SpeechSynthesis utterance error, falling back to audio stream:", e);
-          this.playAudioStreamFallback(cleanText, shortLang, onStart, onEnd);
-        };
-      }
-
-      // Safeguard: if utterance doesn't start in 1 second, use audio stream fallback
-      setTimeout(() => {
-        if (!started && this.synthesis.speaking === false) {
-          this.playAudioStreamFallback(cleanText, shortLang, onStart, onEnd);
+        if (nativeVoice) {
+          utterance.voice = nativeVoice;
         }
-      }, 800);
 
-      this.synthesis.speak(utterance);
-      return;
+        let hasStarted = false;
+
+        utterance.onstart = () => {
+          hasStarted = true;
+          spokeLocally = true;
+          if (onStart) onStart();
+        };
+
+        utterance.onend = () => {
+          if (onEnd) onEnd();
+        };
+
+        utterance.onerror = (err) => {
+          console.warn("SpeechSynthesis utterance error:", err);
+          if (!hasStarted) {
+            this.playAudioStreamFallback(cleanText, lang, onStart, onEnd);
+          } else if (onEnd) {
+            onEnd();
+          }
+        };
+
+        this.synthesis.speak(utterance);
+
+        // Safeguard timer: if speech doesn't start in 600ms, use stream fallback
+        setTimeout(() => {
+          if (!hasStarted && (!this.synthesis.speaking || this.synthesis.paused)) {
+            console.warn("SpeechSynthesis timeout, playing StreamElements fallback");
+            this.synthesis.cancel();
+            this.playAudioStreamFallback(cleanText, lang, onStart, onEnd);
+          }
+        }, 600);
+
+        return;
+      } catch (e) {
+        console.warn("SpeechSynthesis exception:", e);
+      }
     }
 
-    // 3. Fallback: High Quality Online Audio TTS Stream
-    this.playAudioStreamFallback(cleanText, shortLang, onStart, onEnd);
+    // 2. Direct Fallback: High Quality StreamElements TTS Audio Stream
+    this.playAudioStreamFallback(cleanText, lang, onStart, onEnd);
   }
 
   /**
-   * Audio Stream Fallback for browsers lacking TTS voices
+   * Play Public StreamElements Audio Stream Fallback
    */
   playAudioStreamFallback(text, lang, onStart, onEnd) {
-    if (this.synthesis) this.synthesis.cancel();
+    if (this.synthesis) {
+      this.synthesis.cancel();
+    }
 
-    // Use Google Translate audio endpoint
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
-    const audio = new Audio(ttsUrl);
+    const voiceName = this.getStreamElementsVoice(lang);
+    const ttsUrl = `https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(voiceName)}&text=${encodeURIComponent(text)}`;
+
+    const audio = new Audio();
+    this.currentAudio = audio;
+    audio.crossOrigin = "anonymous";
+    audio.src = ttsUrl;
 
     if (onStart) audio.onplay = onStart;
     if (onEnd) {
-      audio.onended = onEnd;
-      audio.onerror = onEnd;
+      audio.onended = () => {
+        this.currentAudio = null;
+        onEnd();
+      };
+      audio.onerror = () => {
+        this.currentAudio = null;
+        // Last resort fallback: Translate TTS
+        this.playGoogleTranslateFallback(text, lang, onStart, onEnd);
+      };
     }
 
     audio.play().then(() => {
       if (onStart) onStart();
     }).catch(err => {
-      console.warn("Audio stream playback failed:", err);
+      console.warn("StreamElements audio playback error:", err);
+      this.playGoogleTranslateFallback(text, lang, onStart, onEnd);
+    });
+  }
+
+  /**
+   * Final Fallback: Google Translate TTS Endpoint
+   */
+  playGoogleTranslateFallback(text, lang, onStart, onEnd) {
+    const langCode = this.getLangCode(lang).split('-')[0];
+    const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${langCode}&client=tw-ob`;
+    
+    const audio = new Audio(googleUrl);
+    this.currentAudio = audio;
+
+    if (onStart) audio.onplay = onStart;
+    if (onEnd) {
+      audio.onended = () => {
+        this.currentAudio = null;
+        onEnd();
+      };
+      audio.onerror = () => {
+        this.currentAudio = null;
+        if (onEnd) onEnd();
+      };
+    }
+
+    audio.play().catch(e => {
+      console.error("All TTS options failed:", e);
       if (onEnd) onEnd();
     });
   }
