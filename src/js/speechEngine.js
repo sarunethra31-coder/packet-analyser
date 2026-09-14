@@ -117,37 +117,82 @@ class SpeechEngine {
   }
 
   /**
-   * Speak Text via Text-To-Speech (TTS)
+   * Speak Text via Text-To-Speech (TTS) with Tamil Audio Stream Fallback
    */
   speakText(text, lang = 'en', onStart, onEnd) {
-    if (!this.synthesis || !text) return;
+    if (!text || !text.trim()) return;
 
-    // Cancel active speech
+    const cleanText = text.trim();
+
+    // Map language selection code
+    let langCode = 'en-US';
+    let ttsLang = lang;
+    if (lang === 'ta' || lang === 'tanglish') {
+      langCode = 'ta-IN';
+      ttsLang = 'ta';
+    } else if (lang === 'hi') langCode = 'hi-IN';
+    else if (lang === 'te') langCode = 'te-IN';
+    else if (lang === 'ml') langCode = 'ml-IN';
+    else if (lang === 'kn') langCode = 'kn-IN';
+    else if (lang === 'es') langCode = 'es-ES';
+    else if (lang === 'fr') langCode = 'fr-FR';
+    else if (lang === 'de') langCode = 'de-DE';
+    else if (lang === 'ja') langCode = 'ja-JP';
+
+    // 1. Check if browser has native Web Speech API voice for Tamil / target lang
+    const nativeVoice = this.voices.find(v => 
+      v.lang.toLowerCase().includes(lang.toLowerCase()) || 
+      v.lang.toLowerCase().includes(langCode.toLowerCase())
+    );
+
+    // 2. For Tamil (ta) OR if browser lacks native voice: Use reliable high-quality TTS Audio Stream
+    if (ttsLang === 'ta' || !nativeVoice) {
+      if (this.synthesis) this.synthesis.cancel();
+
+      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=${ttsLang}&client=tw-ob`;
+      const audio = new Audio(ttsUrl);
+
+      if (onStart) audio.onplay = onStart;
+      if (onEnd) {
+        audio.onended = onEnd;
+        audio.onerror = onEnd;
+      }
+
+      audio.play().then(() => {
+        if (onStart) onStart();
+      }).catch(err => {
+        console.warn("Audio element fallback failed, attempting Web Speech Synthesis:", err);
+        this.fallbackSynthesisSpeak(cleanText, langCode, nativeVoice, onStart, onEnd);
+      });
+      return;
+    }
+
+    this.fallbackSynthesisSpeak(cleanText, langCode, nativeVoice, onStart, onEnd);
+  }
+
+  /**
+   * Browser SpeechSynthesis Fallback
+   */
+  fallbackSynthesisSpeak(text, langCode, nativeVoice, onStart, onEnd) {
+    if (!this.synthesis) return;
     this.synthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
     utterance.rate = this.rate;
     utterance.pitch = this.pitch;
 
-    // Select suitable voice for language
-    if (this.voices.length > 0) {
-      let voiceMatch = null;
-      if (lang === 'ta') voiceMatch = this.voices.find(v => v.lang.includes('ta'));
-      else if (lang === 'hi') voiceMatch = this.voices.find(v => v.lang.includes('hi'));
-      else if (lang === 'es') voiceMatch = this.voices.find(v => v.lang.includes('es'));
-      else if (lang === 'fr') voiceMatch = this.voices.find(v => v.lang.includes('fr'));
-      else if (lang === 'de') voiceMatch = this.voices.find(v => v.lang.includes('de'));
-      else if (lang === 'ja') voiceMatch = this.voices.find(v => v.lang.includes('ja'));
-
-      if (!voiceMatch) {
-        voiceMatch = this.voices.find(v => v.lang.includes('en-IN') || v.lang.includes('en-US')) || this.voices[0];
-      }
-
-      if (voiceMatch) utterance.voice = voiceMatch;
+    if (nativeVoice) {
+      utterance.voice = nativeVoice;
+    } else if (this.voices.length > 0) {
+      utterance.voice = this.voices[0];
     }
 
     if (onStart) utterance.onstart = onStart;
-    if (onEnd) utterance.onend = onEnd;
+    if (onEnd) {
+      utterance.onend = onEnd;
+      utterance.onerror = onEnd;
+    }
 
     this.synthesis.speak(utterance);
   }
